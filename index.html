@@ -3,283 +3,479 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StyloAI - Análisis Facial Biométrico Real</title>
+    <title>StyloAI Expert - Asesoría de Imagen Integral</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     
     <style>
-        /* --- ESTILOS (Mantenemos el diseño moderno) --- */
+        /* --- ESTILOS MODERNOS Y RESPONSIVOS --- */
         :root {
-            --primary-color: #2c3e50;
-            --accent-color: #27ae60; /* Verde tecnológico */
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-color: #333333;
-            --border-radius: 12px;
-            --shadow: 0 10px 30px rgba(0,0,0,0.08);
+            --primary-dark: #1a1a1a;
+            --accent: #d4af37; /* Dorado elegante */
+            --accent-hover: #b5952f;
+            --bg-light: #f8f9fa;
+            --card-white: #ffffff;
+            --text-main: #2c3e50;
+            --text-light: #7f8c8d;
+            --shadow: 0 15px 35px rgba(0,0,0,0.1);
+            --radius: 16px;
         }
 
-        body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; }
+        body { font-family: 'Montserrat', sans-serif; background-color: var(--bg-light); color: var(--text-main); margin: 0; padding: 0; line-height: 1.6; }
         
-        .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; }
-        @media (max-width: 768px) { .container { grid-template-columns: 1fr; } }
+        /* Header */
+        header { background: var(--primary-dark); color: white; padding: 40px 20px; text-align: center; border-bottom: 4px solid var(--accent); }
+        header h1 { margin: 0; font-size: 2.2rem; font-weight: 700; letter-spacing: 1px; }
+        header p { margin-top: 10px; opacity: 0.8; font-weight: 300; }
 
-        header { text-align: center; padding: 40px 20px; background: var(--primary-color); color: white; margin-bottom: 20px; }
-        header h1 { margin: 0; font-size: 2.5rem; }
+        /* Estructura Principal */
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1.5fr; gap: 40px; }
+        @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+        /* Panel de Control (Izquierda) */
+        .control-panel { background: var(--card-white); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); position: relative; }
         
-        .input-section { background: var(--card-bg); padding: 30px; border-radius: var(--border-radius); box-shadow: var(--shadow); }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--primary-color); }
-        select, input[type="number"], input[type="file"] { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .section-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); border-left: 4px solid var(--accent); padding-left: 10px; margin-bottom: 20px; text-transform: uppercase; }
         
-        /* Contenedor de imagen con Canvas superpuesto */
-        .image-preview-container { 
-            width: 100%; height: auto; min-height: 300px; 
-            border: 2px dashed #ddd; border-radius: var(--border-radius); 
-            display: flex; align-items: center; justify-content: center; 
-            background-color: #fafafa; position: relative; overflow: hidden;
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group.full { grid-column: span 2; }
+        
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text-main); }
+        select, input { width: 100%; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-family: inherit; transition: 0.3s; box-sizing: border-box; }
+        select:focus, input:focus { border-color: var(--accent); outline: none; }
+
+        /* Área de Imagen */
+        .image-area { 
+            position: relative; width: 100%; min-height: 350px; 
+            border: 2px dashed #ccc; border-radius: var(--radius); 
+            background: #fafafa; display: flex; align-items: center; justify-content: center;
+            overflow: hidden; margin-bottom: 20px; transition: 0.3s;
         }
+        .image-area.active { border-style: solid; border-color: var(--accent); }
         
-        #imagePreview { max-width: 100%; display: none; border-radius: 8px; }
-        /* El canvas se dibuja sobre la imagen para mostrar los puntos detectados */
-        canvas { position: absolute; top: 0; left: 0; }
+        #imagePreview { max-width: 100%; max-height: 500px; display: none; object-fit: cover; }
+        canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
 
-        .btn-analyze { width: 100%; padding: 15px; background-color: var(--primary-color); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-analyze:hover { background-color: #34495e; }
-        .btn-analyze:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        .btn-action { 
+            width: 100%; padding: 16px; background-color: var(--primary-dark); 
+            color: var(--accent); border: none; border-radius: 8px; 
+            font-size: 1.1rem; font-weight: 700; cursor: pointer; 
+            transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
+        }
+        .btn-action:hover:not(:disabled) { background-color: black; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-action:disabled { background-color: #bdc3c7; color: #fff; cursor: not-allowed; }
 
-        .results-section { display: none; }
-        .result-card { background: var(--card-bg); padding: 25px; border-radius: var(--border-radius); box-shadow: var(--shadow); margin-bottom: 25px; border-left: 5px solid var(--accent-color); animation: fadeIn 0.6s ease-out; }
+        /* Panel de Resultados (Derecha) */
+        .results-panel { display: none; animation: fadeIn 0.8s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .result-card { background: var(--card-white); padding: 30px; border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 25px; position: relative; overflow: hidden; }
+        .result-card::before { content: ''; position: absolute; top: 0; left: 0; width: 6px; height: 100%; background: var(--accent); }
         
-        .result-title { font-size: 1.4rem; color: var(--primary-color); margin-top: 0; display: flex; align-items: center; gap: 10px; }
-        .highlight { font-weight: 700; color: var(--accent-color); font-size: 1.2rem; }
-        .recommendation-list li { margin-bottom: 8px; }
+        .card-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .card-icon { font-size: 2rem; }
+        .card-title { font-size: 1.4rem; font-weight: 700; margin: 0; color: var(--primary-dark); }
         
-        /* Estado de carga */
-        #statusMessage { text-align: center; font-weight: 600; margin-top: 10px; color: #e67e22; }
+        .analysis-highlight { font-size: 1.1rem; font-weight: 600; color: var(--accent-hover); margin-bottom: 10px; display: block; }
+        .analysis-text { font-size: 0.95rem; color: #555; margin-bottom: 15px; }
+        
+        .tags-container { display: flex; flex-wrap: wrap; gap: 10px; }
+        .tag { background: var(--bg-light); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--primary-dark); border: 1px solid #ddd; }
+
+        .status-msg { text-align: center; font-size: 0.9rem; margin-top: 10px; font-weight: 600; }
+        .loading { color: #e67e22; }
+        .ready { color: #27ae60; }
+        .error { color: #e74c3c; }
+
     </style>
 </head>
 <body>
 
     <header>
-        <h1>StyloAI Bio-Scan</h1>
-        <p>Análisis de rostro real mediante Inteligencia Artificial</p>
+        <h1>StyloAI Expert</h1>
+        <p>Análisis Biométrico & Asesoría de Imagen Personalizada</p>
     </header>
 
     <div class="container">
-        <div class="input-section">
-            <h2>Datos Biométricos</h2>
+        <div class="control-panel">
+            <div class="section-title">1. Configuración del Perfil</div>
             
-            <div class="form-group">
-                <label>1. Estado del Sistema</label>
-                <div id="modelStatus" style="color: #e74c3c; font-size: 0.9rem;">⏳ Cargando modelos de IA... (Espera unos segundos)</div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Género (para estilo)</label>
+                    <select id="genderInput">
+                        <option value="male">Masculino</option>
+                        <option value="female">Femenino</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Altura (cm)</label>
+                    <input type="number" id="heightInput" placeholder="Ej: 175">
+                </div>
+                <div class="form-group">
+                    <label>Textura de Cabello</label>
+                    <select id="hairTexture">
+                        <option value="liso">Liso / Lacio</option>
+                        <option value="ondulado">Ondulado (Waves)</option>
+                        <option value="rizado">Rizado (Curls)</option>
+                        <option value="crespo">Crespo / Afro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Biotipo (Aproximado)</label>
+                    <select id="bodyType">
+                        <option value="auto">Detectar / Promedio</option>
+                        <option value="ectomorfo">Ectomorfo (Delgado/Largo)</option>
+                        <option value="mesomorfo">Mesomorfo (Atlético)</option>
+                        <option value="endomorfo">Endomorfo (Estructura ancha)</option>
+                    </select>
+                </div>
             </div>
 
-            <div class="form-group">
-                <label for="imageUpload">2. Sube tu foto (Frontal y con luz)</label>
-                <div class="image-preview-container" id="previewContainer">
-                    <span class="placeholder-text">Sube una foto clara</span>
-                    <img id="imagePreview" alt="Tu foto">
-                    </div>
-                <input type="file" id="imageUpload" accept="image/*">
+            <div class="section-title">2. Escaneo Facial</div>
+            <div class="image-area" id="dropArea">
+                <div id="placeholderText" style="text-align: center; color: #999;">
+                    <span style="font-size: 2rem;">📷</span><br>
+                    Toca o arrastra para subir foto
+                </div>
+                <img id="imagePreview" alt="Vista previa">
             </div>
-
-            <div class="form-group">
-                <label for="hairTexture">3. Tipo de Cabello</label>
-                <select id="hairTexture">
-                    <option value="liso">Liso</option>
-                    <option value="ondulado">Ondulado</option>
-                    <option value="rizado">Rizado</option>
-                    <option value="crespo">Crespo / Afro</option>
-                </select>
-            </div>
-
-            <button id="btnAnalyze" class="btn-analyze" onclick="startAnalysis()" disabled>Analizar Rostro</button>
-            <p id="statusMessage"></p>
+            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+            
+            <button id="btnAnalyze" class="btn-action" onclick="performFullAnalysis()" disabled>
+                Analizar Mi Imagen
+            </button>
+            <div id="statusMessage" class="status-msg loading">⏳ Cargando modelos de IA...</div>
         </div>
 
-        <div id="resultsColumn">
-            <div id="resultsContainer" class="results-section">
-                
-                <div class="result-card">
-                    <h3 class="result-title">🧠 Análisis Biométrico Detectado</h3>
-                    <p>Forma de Rostro: <span id="faceShapeResult" class="highlight">---</span></p>
-                    <p id="faceAnalysisDetails" style="font-size: 0.9rem; color: #666;"></p>
+        <div id="resultsPanel" class="results-panel">
+            
+            <div class="result-card">
+                <div class="card-header">
+                    <span class="card-icon">🧠</span>
+                    <h3 class="card-title">Diagnóstico Facial</h3>
                 </div>
-
-                <div class="result-card">
-                    <h3 class="result-title">✂️ Corte Recomendado</h3>
-                    <ul class="recommendation-list" id="haircutList"></ul>
-                </div>
-
-                <div class="result-card">
-                    <h3 class="result-title">🧴 Productos Sugeridos</h3>
-                    <ul class="recommendation-list" id="productList"></ul>
-                </div>
+                <span id="faceShapeTitle" class="analysis-highlight">---</span>
+                <p id="faceShapeDesc" class="analysis-text">Esperando análisis...</p>
+                <div class="tags-container" id="faceTags"></div>
             </div>
+
+            <div class="result-card">
+                <div class="card-header">
+                    <span class="card-icon">✂️</span>
+                    <h3 class="card-title">Corte & Estilismo</h3>
+                </div>
+                <span class="analysis-highlight">Cortes Recomendados:</span>
+                <p class="analysis-text">Basado en la geometría de tu rostro y tu textura <strong id="resTexture"></strong>:</p>
+                <ul id="haircutList" style="padding-left: 20px; color: #444;"></ul>
+            </div>
+
+            <div class="result-card">
+                <div class="card-header">
+                    <span class="card-icon">👕</span>
+                    <h3 class="card-title">Asesoría de Vestimenta</h3>
+                </div>
+                <span id="fashionStyleTitle" class="analysis-highlight">Estilo Sugerido</span>
+                <p id="bodyTypeDesc" class="analysis-text"></p>
+                <p id="fashionAdvice" class="analysis-text"></p>
+                <div class="tags-container" id="fashionTags"></div>
+            </div>
+
+            <div class="result-card">
+                <div class="card-header">
+                    <span class="card-icon">🧴</span>
+                    <h3 class="card-title">Rutina de Mantenimiento</h3>
+                </div>
+                <ul id="productList" style="list-style: none; padding: 0;"></ul>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // --- 1. CONFIGURACIÓN Y CARGA DE MODELOS ---
-        const imageUpload = document.getElementById('imageUpload');
-        const imagePreview = document.getElementById('imagePreview');
-        const container = document.getElementById('previewContainer');
-        const btnAnalyze = document.getElementById('btnAnalyze');
-        const modelStatus = document.getElementById('modelStatus');
-        
-        // URL de los modelos (usando CDN público compatible con CORS)
+        // --- CONFIGURACIÓN E INICIALIZACIÓN ---
         const MODEL_URL = 'https://cdn.jsdelivr.net/gh/cgarciagl/face-api.js@0.22.2/weights/';
+        const btnAnalyze = document.getElementById('btnAnalyze');
+        const statusMsg = document.getElementById('statusMessage');
+        const imgUpload = document.getElementById('imageUpload');
+        const dropArea = document.getElementById('dropArea');
+        const imgPreview = document.getElementById('imagePreview');
+        const placeholder = document.getElementById('placeholderText');
 
-        async function loadModels() {
-            try {
-                // Cargar solo el modelo TinyFace (rápido) y Landmarks (puntos faciales)
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                
-                modelStatus.innerText = "✅ Modelos de IA cargados. Listo para usar.";
-                modelStatus.style.color = "#27ae60";
-                btnAnalyze.disabled = false;
-            } catch (error) {
-                console.error(error);
-                modelStatus.innerText = "❌ Error cargando IA. Verifica tu conexión a internet.";
-            }
+        // Cargar modelos de Face-API
+        Promise.all([
+            faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+            faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL)
+        ]).then(startApp).catch(err => {
+            console.error(err);
+            statusMsg.innerText = "❌ Error: No se pudo cargar la IA. Verifica tu conexión.";
+            statusMsg.className = "status-msg error";
+        });
+
+        function startApp() {
+            statusMsg.innerText = "✅ IA Calibrada y Lista.";
+            statusMsg.className = "status-msg ready";
+            btnAnalyze.disabled = false;
         }
 
-        // Iniciar carga al abrir
-        loadModels();
+        // --- MANEJO DE IMAGEN ---
+        dropArea.addEventListener('click', () => imgUpload.click());
+        imgUpload.addEventListener('change', handleImage);
 
-        // --- 2. MANEJO DE IMAGEN ---
-        let canvas;
-        
-        imageUpload.addEventListener('change', async () => {
-            const file = imageUpload.files[0];
+        function handleImage(e) {
+            const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = async (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    document.querySelector('.placeholder-text').style.display = 'none';
-                    
-                    // Limpiar canvas anterior si existe
-                    if (canvas) canvas.remove();
+                reader.onload = (event) => {
+                    imgPreview.src = event.target.result;
+                    imgPreview.style.display = 'block';
+                    placeholder.style.display = 'none';
+                    dropArea.classList.add('active');
+                    // Limpiar canvas previo si existe
+                    const existingCanvas = document.querySelector('canvas');
+                    if (existingCanvas) existingCanvas.remove();
+                    // Ocultar resultados previos
+                    document.getElementById('resultsPanel').style.display = 'none';
                 };
                 reader.readAsDataURL(file);
             }
-        });
+        }
 
-        // --- 3. LÓGICA DE ANÁLISIS REAL ---
-        async function startAnalysis() {
-            if (!imagePreview.src) return alert("Sube una imagen primero.");
-            
-            document.getElementById('statusMessage').innerText = "🔍 Escaneando geometría facial...";
-            
-            // Detección
-            // Usamos TinyFaceDetectorOptions para velocidad
-            const detection = await faceapi.detectSingleFace(imagePreview, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
+        // --- LÓGICA DE ANÁLISIS EXPERTO ---
+        async function performFullAnalysis() {
+            if (!imgPreview.src || imgPreview.style.display === 'none') return alert("Por favor sube una imagen primero.");
+
+            statusMsg.innerText = "🔍 Analizando biometría y proporciones...";
+            statusMsg.className = "status-msg loading";
+            btnAnalyze.disabled = true;
+
+            // 1. Detección Facial
+            const detection = await faceapi.detectSingleFace(imgPreview, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks();
 
             if (!detection) {
-                document.getElementById('statusMessage').innerText = "⚠️ No se detectó un rostro claro. Intenta otra foto.";
+                statusMsg.innerText = "⚠️ No se detectó rostro. Usa una foto frontal con buena luz.";
+                statusMsg.className = "status-msg error";
+                btnAnalyze.disabled = false;
                 return;
             }
 
-            // Dibujar los puntos en la imagen (Feedback visual)
-            if (canvas) canvas.remove();
-            canvas = faceapi.createCanvasFromMedia(imagePreview);
-            container.append(canvas);
-            const displaySize = { width: imagePreview.width, height: imagePreview.height };
+            // Dibujar Landmarks
+            const canvas = faceapi.createCanvasFromMedia(imgPreview);
+            dropArea.append(canvas);
+            const displaySize = { width: imgPreview.width, height: imgPreview.height };
             faceapi.matchDimensions(canvas, displaySize);
             const resizedDetections = faceapi.resizeResults(detection, displaySize);
             faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
 
-            // --- CÁLCULOS MATEMÁTICOS DE PROPORCIÓN ---
+            // 2. Procesar Datos Matemáticos
             const landmarks = detection.landmarks;
             const jawWidth = landmarks.getJawOutline()[16].x - landmarks.getJawOutline()[0].x;
-            const faceHeight = landmarks.getChin().y - landmarks.getNose()[0].y; // Aprox desde cejas a barbilla
+            const faceHeight = landmarks.getChin().y - landmarks.getNose()[0].y; // Medida relativa
+            const cheekWidth = landmarks.getJawOutline()[14].x - landmarks.getJawOutline()[2].x;
             
-            // Obtener ancho de pómulos (Cheekbones) - Puntos 1 y 15 aprox
-            const cheekBoneWidth = landmarks.getJawOutline()[14].x - landmarks.getJawOutline()[2].x;
-            
-            // Ratio: Largo / Ancho
             const ratio = faceHeight / jawWidth;
-            
-            // Clasificación Matemática Simple
-            let faceShape = "Indefinido";
-            let description = "";
+            const cheekToJawRatio = cheekWidth / jawWidth;
 
-            // Lógica de clasificación (Simplificada pero basada en medidas reales)
-            if (ratio > 1.5) {
-                faceShape = "OVALADO / ALARGADO";
-                description = "Tu rostro es notablemente más largo que ancho.";
-            } else if (ratio < 1.15 && cheekBoneWidth > jawWidth * 1.1) {
-                faceShape = "REDONDO / DIAMANTE";
-                description = "El ancho y largo son similares, con pómulos marcados o mejillas suaves.";
+            // 3. Obtener Datos del Formulario
+            const userGender = document.getElementById('genderInput').value;
+            const userHeight = parseInt(document.getElementById('heightInput').value) || 170; // Default 170
+            const userTexture = document.getElementById('hairTexture').value;
+            let userBodyType = document.getElementById('bodyType').value;
+
+            // 4. Determinar Forma del Rostro
+            let faceShape = "Ovalado";
+            let shapeDesc = "";
+            
+            if (ratio > 1.45) {
+                faceShape = "Alargado / Oblongo";
+                shapeDesc = "Tu rostro tiene una estructura vertical dominante. El objetivo es añadir volumen a los lados para equilibrar.";
             } else if (ratio < 1.15) {
-                faceShape = "CUADRADO";
-                description = "Tienes una mandíbula fuerte y angular, con proporciones ancho/largo similares.";
+                if (cheekToJawRatio > 1.1) {
+                    faceShape = "Redondo";
+                    shapeDesc = "Tus facciones son suaves y el ancho es similar al largo. Buscamos ángulos y altura para estilizar.";
+                } else {
+                    faceShape = "Cuadrado";
+                    shapeDesc = "Tienes una mandíbula fuerte y angular. El objetivo es suavizar las esquinas o potenciar la masculinidad (si aplica).";
+                }
+            } else if (cheekToJawRatio > 1.2) {
+                faceShape = "Diamante / Corazón";
+                shapeDesc = "Pómulos prominentes y barbilla afilada. Un rostro muy estético que permite gran variedad de estilos.";
             } else {
-                faceShape = "OVALADO (Estándar)";
-                description = "Tus proporciones son equilibradas (ratio áureo cercano a 1.3-1.4).";
+                faceShape = "Ovalado";
+                shapeDesc = "El 'Canon Ideal'. Tus proporciones están equilibradas, permitiéndote usar casi cualquier estilo.";
             }
 
-            // Mostrar Resultados
-            displayResults(faceShape, description);
-            document.getElementById('statusMessage').innerText = "✅ Análisis completado.";
+            // 5. Determinar Biotipo (Inferencia simple si está en auto)
+            if (userBodyType === 'auto') {
+                if (userHeight > 182 && ratio > 1.3) userBodyType = 'ectomorfo';
+                else if (userHeight < 170 && faceShape === 'Redondo') userBodyType = 'endomorfo';
+                else userBodyType = 'mesomorfo';
+            }
+
+            // --- GENERACIÓN DE RESULTADOS ---
+            generateOutputs(faceShape, shapeDesc, userGender, userTexture, userHeight, userBodyType);
+            
+            statusMsg.innerText = "✅ Análisis Completado Exitosamente.";
+            statusMsg.className = "status-msg ready";
+            btnAnalyze.disabled = false;
         }
 
-        // --- 4. GENERAR RECOMENDACIONES ---
-        function displayResults(shape, desc) {
-            document.getElementById('resultsContainer').style.display = 'block';
-            document.getElementById('faceShapeResult').innerText = shape;
-            document.getElementById('faceAnalysisDetails').innerText = desc;
+        function generateOutputs(shape, desc, gender, texture, height, bodyType) {
+            // Rellenar Rostro
+            document.getElementById('faceShapeTitle').innerText = shape;
+            document.getElementById('faceShapeDesc').innerText = desc;
             
-            const texture = document.getElementById('hairTexture').value;
-            generateRecommendations(shape, texture);
-            
-            document.getElementById('resultsColumn').scrollIntoView({ behavior: 'smooth' });
-        }
+            const faceTags = document.getElementById('faceTags');
+            faceTags.innerHTML = `
+                <span class="tag">Simetría IA</span>
+                <span class="tag">Biometría</span>
+            `;
 
-        function generateRecommendations(shape, texture) {
+            // Rellenar Cabello
+            document.getElementById('resTexture').innerText = texture;
             const cutsList = document.getElementById('haircutList');
-            const prodsList = document.getElementById('productList');
             cutsList.innerHTML = "";
-            prodsList.innerHTML = "";
-
-            let cuts = [];
             
-            // Lógica combinada: Forma + Textura
-            if (shape.includes("OVALADO")) {
-                if (texture === "liso") cuts = ["Pompadour clásico", "Undercut texturizado", "Buzz cut"];
-                else if (texture === "rizado") cuts = ["Fade medio con rizos arriba", "Corte en capas sueltas"];
-                else cuts = ["Corte César", "Taper Fade"];
-            } else if (shape.includes("CUADRADO")) {
-                cuts = ["Buzz cut (militar)", "Quiff alto (para alargar)", "French Crop"];
-            } else if (shape.includes("REDONDO")) {
-                cuts = ["Faux Hawk (para dar altura)", "Pompadour con volumen", "Laterales muy cortos (Skin Fade)"];
-            } else {
-                cuts = ["Flequillo texturizado", "Mullet moderno", "Corte medio desordenado"];
-            }
-
-            cuts.forEach(c => {
+            const recommendations = getHairRecommendations(shape, texture, gender);
+            recommendations.forEach(cut => {
                 let li = document.createElement('li');
-                li.innerText = "✂️ " + c;
+                li.innerHTML = `<strong>${cut.name}:</strong> ${cut.why}`;
                 cutsList.appendChild(li);
             });
 
-            // Productos según textura
-            let products = [];
-            if (texture === "liso") products = ["Cera Mate", "Polvo de volumen"];
-            if (texture === "ondulado") products = ["Spray de Sal Marina", "Pomada base agua"];
-            if (texture === "rizado") products = ["Crema activadora de rizos", "Shampoo Low-Poo"];
-            if (texture === "crespo") products = ["Aceite de Argán", "Manteca de Karité", "Esponja Twist"];
+            // Rellenar Moda
+            const fashionTitle = document.getElementById('fashionStyleTitle');
+            const fashionDesc = document.getElementById('fashionAdvice');
+            const bodyDesc = document.getElementById('bodyTypeDesc');
+            
+            const styleData = getFashionAdvice(bodyType, height, gender);
+            
+            fashionTitle.innerText = styleData.styleName;
+            bodyDesc.innerHTML = `Detectado/Seleccionado: <strong>${capitalize(bodyType)}</strong> (Altura: ${height}cm)`;
+            fashionDesc.innerText = styleData.advice;
+            
+            const fashionTags = document.getElementById('fashionTags');
+            fashionTags.innerHTML = "";
+            styleData.keywords.forEach(k => {
+                let s = document.createElement('span');
+                s.className = "tag"; s.innerText = k;
+                fashionTags.appendChild(s);
+            });
 
+            // Rellenar Productos
+            const prodList = document.getElementById('productList');
+            prodList.innerHTML = "";
+            const products = getProducts(texture, gender);
+            
             products.forEach(p => {
                 let li = document.createElement('li');
-                li.innerText = "🧴 " + p;
-                prodsList.appendChild(li);
+                li.style.marginBottom = "10px";
+                li.innerHTML = `✔️ <strong>${p.name}:</strong> <span style="font-size:0.9em; color:#666;">${p.usage}</span>`;
+                prodList.appendChild(li);
             });
+
+            // Mostrar Panel
+            document.getElementById('resultsPanel').style.display = 'block';
+            document.getElementById('resultsPanel').scrollIntoView({ behavior: 'smooth' });
         }
+
+        // --- BASES DE DATOS DE ESTILO (SIMULADAS) ---
+
+        function getHairRecommendations(shape, texture, gender) {
+            // Lógica simplificada de experto
+            const isMale = gender === 'male';
+            let cuts = [];
+
+            if (isMale) {
+                if (shape.includes("Ovalado")) cuts = [
+                    { name: "Pompadour Clásico", why: "Aprovecha tu simetría para dar volumen arriba." },
+                    { name: "Undercut & Slick Back", why: "Look moderno que despeja el rostro." },
+                    { name: "Buzz Cut", why: "Si tienes buena estructura ósea, esto resalta tus facciones." }
+                ];
+                else if (shape.includes("Cuadrado")) cuts = [
+                    { name: "French Crop", why: "Suaviza la frente pero mantiene la masculinidad de la mandíbula." },
+                    { name: "Side Part (Raya al lado)", why: "Clásico y elegante para negocios." },
+                    { name: "Textured Quiff", why: "Rompe la rigidez de las líneas cuadradas." }
+                ];
+                else if (shape.includes("Redondo")) cuts = [
+                    { name: "Fade Alto (Skin Fade)", why: "Elimina volumen lateral para alargar visualmente el rostro." },
+                    { name: "Faux Hawk", why: "Añade altura en la coronilla, estilizando el perfil." },
+                    { name: "Barba perfilada", why: "Crucial para crear ángulos en la mandíbula." }
+                ];
+                else cuts = [ // Alargado/Diamante
+                    { name: "Fringe / Flequillo", why: "Acorta visualmente la frente (ideal para rostros largos)." },
+                    { name: "Corte con tijera a los lados", why: "Evita rapar los lados para no alargar más el rostro." }
+                ];
+            } else {
+                // Female Logic
+                if (shape.includes("Ovalado")) cuts = [
+                    { name: "Long Bob (Lob)", why: "El corte más versátil y chic." },
+                    { name: "Capas Largas", why: "Da movimiento sin alterar la forma perfecta." }
+                ];
+                else if (shape.includes("Cuadrado")) cuts = [
+                    { name: "Flequillo Cortina (Curtain Bangs)", why: "Suaviza los ángulos de la mandíbula." },
+                    { name: "Largo y Liso", why: "Estiliza verticalmente." }
+                ];
+                else if (shape.includes("Redondo")) cuts = [
+                    { name: "Pixie con volumen", why: "Alarga el cuello y estiliza." },
+                    { name: "Side Swept Bangs", why: "Rompe la simetría redonda creando diagonales." }
+                ];
+                else cuts = [
+                    { name: "Ondas estilo Hollywood", why: "Añade anchura lateral para rostros alargados." },
+                    { name: "Bob a la altura de la barbilla", why: "Da volumen donde hace falta." }
+                ];
+            }
+            return cuts;
+        }
+
+        function getFashionAdvice(biotype, height, gender) {
+            const isMale = gender === 'male';
+            
+            if (biotype === 'ectomorfo') {
+                return {
+                    styleName: isMale ? "Layering & Streetwear" : "Volumen & Estructura",
+                    advice: "Tu cuerpo tiende a ser delgado. El objetivo es crear volumen visual. Usa capas (camisa + sweater + chaqueta). Evita la ropa 'Skinny' extrema que resalta la delgadez. Los cortes 'Slim' o 'Regular' son ideales. Telas gruesas como denim pesado o lana te favorecen.",
+                    keywords: ["Layering", "Oversized Controlado", "Cuellos Altos", "Rayas Horizontales"]
+                };
+            } else if (biotype === 'endomorfo') {
+                return {
+                    styleName: isMale ? "Smart Casual Minimalista" : "Monocromático Chic",
+                    advice: "Buscas estilizar la figura. La ropa monocromática (un solo color o tonos similares) crea una línea vertical ininterrumpida que adelgaza. Evita estampados grandes. Opta por chaquetas estructuradas en los hombros para mejorar la postura.",
+                    keywords: ["Monocromático", "Corte Recto", "Telas Mate", "Verticalidad"]
+                };
+            } else { // Mesomorfo
+                return {
+                    styleName: isMale ? "Fitted & Athletic" : "Resaltar Silueta",
+                    advice: "Tienes una estructura atlética natural. Tu ropa debe seguir la línea de tu cuerpo sin apretar demasiado. Las camisas entalladas y pantalones slim-tapered lucen excelente. Puedes experimentar con casi cualquier tendencia.",
+                    keywords: ["Entallado", "Deportivo", "Versátil", "Ajuste Perfecto"]
+                };
+            }
+        }
+
+        function getProducts(texture, gender) {
+            let products = [];
+            // Base
+            products.push({ name: "Shampoo s/Sulfatos", usage: "Base esencial para no resecar el cuero cabelludo." });
+
+            if (texture === 'liso') {
+                products.push({ name: "Polvo Voluminizador", usage: "Aplícalo en la raíz seca para dar textura y levantar." });
+                products.push({ name: "Cera Mate (Clay)", usage: "Fijación fuerte sin brillo para un look natural." });
+            } else if (texture === 'ondulado') {
+                products.push({ name: "Spray de Sal Marina", usage: "Potencia las ondas naturales 'efecto playa'." });
+                products.push({ name: "Pomada a base de agua", usage: "Control medio con un poco de brillo." });
+            } else if (texture === 'rizado') {
+                products.push({ name: "Crema para Peinar (Leave-in)", usage: "Hidratación constante para definir el rizo." });
+                products.push({ name: "Mousse Definidor", usage: "Evita el frizz sin dejar el pelo duro." });
+            } else { // Crespo
+                products.push({ name: "Aceites (Argán/Coco)", usage: "Nutrición profunda diaria." });
+                products.push({ name: "Manteca de Karité", usage: "Sellado de humedad." });
+            }
+            return products;
+        }
+
+        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
     </script>
 </body>
 </html>
